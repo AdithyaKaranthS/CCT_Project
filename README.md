@@ -31,46 +31,41 @@ The browser uses Firebase Authentication for identity. All product, invoice, war
 
 ```text
 .
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── dependencies.py
-│   │   ├── firebase.py
-│   │   ├── main.py
-│   │   ├── routes/
-│   │   │   ├── __init__.py
-│   │   │   ├── analytics.py
-│   │   │   ├── auth.py
-│   │   │   ├── claims.py
-│   │   │   ├── invoices.py
-│   │   │   ├── maintenance.py
-│   │   │   ├── notifications.py
-│   │   │   ├── ocr.py
-│   │   │   ├── products.py
-│   │   │   ├── qr.py
-│   │   │   ├── services.py
-│   │   │   └── warranties.py
-│   │   ├── schemas/
-│   │   │   ├── __init__.py
-│   │   │   ├── claims.py
-│   │   │   ├── maintenance.py
-│   │   │   ├── product.py
-│   │   │   └── service.py
-│   │   └── services/
-│   │       ├── __init__.py
-│   │       ├── notification_service.py
-│   │       ├── product_service.py
-│   │       ├── storage_service.py
-│   │       └── warranty_service.py
-│   ├── tests/
-│   │   ├── test_api_auth.py
-│   │   └── test_warranty_service.py
-│   ├── .env.example
-│   ├── Dockerfile
-│   ├── requirements-dev.txt
-│   └── requirements.txt
 ├── src/
+│   ├── backend/
+│   │   ├── app/
+│   │   │   ├── routes/
+│   │   │   │   ├── analytics.py
+│   │   │   │   ├── auth.py
+│   │   │   │   ├── claims.py
+│   │   │   │   ├── invoices.py
+│   │   │   │   ├── maintenance.py
+│   │   │   │   ├── notifications.py
+│   │   │   │   ├── ocr.py
+│   │   │   │   ├── products.py
+│   │   │   │   ├── qr.py
+│   │   │   │   ├── services.py
+│   │   │   │   └── warranties.py
+│   │   │   ├── schemas/
+│   │   │   │   ├── claims.py
+│   │   │   │   ├── maintenance.py
+│   │   │   │   ├── product.py
+│   │   │   │   └── service.py
+│   │   │   ├── services/
+│   │   │   │   ├── notification_service.py
+│   │   │   │   ├── product_service.py
+│   │   │   │   ├── storage_service.py
+│   │   │   │   └── warranty_service.py
+│   │   │   ├── config.py
+│   │   │   ├── dependencies.py
+│   │   │   ├── firebase.py
+│   │   │   └── main.py
+│   │   ├── tests/
+│   │   │   ├── test_api_auth.py
+│   │   │   └── test_warranty_service.py
+│   │   ├── .env.example
+│   │   ├── requirements-dev.txt
+│   │   └── requirements.txt
 │   └── frontend/
 │       ├── App.jsx
 │       ├── api.js
@@ -89,7 +84,7 @@ The browser uses Firebase Authentication for identity. All product, invoice, war
 └── vite.config.js
 ```
 
-The frontend is served and built from the repository root by Vite. The FastAPI application, its dependencies, tests and Dockerfile are grouped under `backend/`. Firebase Hosting and Firestore configuration stay at the root because the Firebase CLI and `firebase.json` refer to those paths. There is no Docker Compose configuration, separate docs/data tree, frontend test suite, or generated test-report framework in this project, so none is represented by empty folders.
+The frontend is served and built from the repository root by Vite. The FastAPI application, its dependencies and tests are grouped under `src/backend/`; test files remain outside the application package. Firebase Hosting and Firestore configuration stay at the root because the Firebase CLI and `firebase.json` refer to those paths. No separate docs/data tree, frontend test suite or generated test-report framework is present, so unused empty folders are not included.
 
 ## Features
 
@@ -114,7 +109,7 @@ The frontend is served and built from the repository root by Vite. The FastAPI a
 - Backend: Python 3.11+, FastAPI, Pydantic Settings, Uvicorn.
 - File processing: PyMuPDF, Pillow, optional Tesseract OCR, QR Code and ReportLab.
 - Tests: Python `unittest` with FastAPI `TestClient`.
-- Optional deployment: Docker, Firebase Hosting, Google Cloud Run and Cloud Scheduler.
+- Optional deployment: Firebase Hosting, Google Cloud Run and Cloud Scheduler.
 
 > **Persistent local storage:** On Windows, invoice files live in `%LOCALAPPDATA%\Warrantly\invoices`, outside the source tree, so they survive app restarts, rebuilds and source cleanup. On Linux/macOS, the default is `$XDG_DATA_HOME/warrantly/invoices` or `~/.local/share/warrantly/invoices`. These files still depend on the local machine and should be backed up. Cloud Run's writable filesystem is ephemeral and instance-local; do not use this local-storage configuration there for durable invoices.
 
@@ -126,7 +121,6 @@ The frontend is served and built from the repository root by Vite. The FastAPI a
 - Python 3.11 or newer and pip.
 - A Firebase project with Email/Password Authentication enabled and Cloud Firestore created.
 - Google Cloud Application Default Credentials for local backend access (`gcloud` CLI), or a service-account credential kept outside the repository.
-- Docker Engine only if using the container instructions below.
 
 ### 1. Firebase project
 
@@ -146,13 +140,13 @@ Use Python 3.11 or newer. For local development, authenticate using Application 
 
 ```powershell
 gcloud auth application-default login
-Copy-Item backend\.env.example backend\.env
+Copy-Item src\backend\.env.example src\backend\.env
 ```
 
-Set `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` and a long random `SCHEDULER_SECRET` in `backend\.env`. The invoice directory defaults to a persistent per-user data folder; override it with an absolute `LOCAL_INVOICE_STORAGE_DIR` path if desired. `GOOGLE_APPLICATION_CREDENTIALS` is optional; if used, it must point to a credential file stored outside the repository. Never commit credentials.
+Set `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` and a long random `SCHEDULER_SECRET` in `src\backend\.env`. The invoice directory defaults to a persistent per-user data folder; override it with an absolute `LOCAL_INVOICE_STORAGE_DIR` path if desired. `GOOGLE_APPLICATION_CREDENTIALS` is optional; if used, it must point to a credential file stored outside the repository. Never commit credentials.
 
 ```powershell
-Set-Location backend
+Set-Location src\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -184,7 +178,7 @@ The app does not use mock or local fallback data. Firebase configuration and a r
 Copy the tracked examples and replace their placeholders with your own project settings:
 
 - Root `.env`: `VITE_API_URL` and the Firebase web app values (`VITE_FIREBASE_*`).
-- `backend\.env`: `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` and `SCHEDULER_SECRET`. Optional settings include `GOOGLE_APPLICATION_CREDENTIALS`, `LOCAL_INVOICE_STORAGE_DIR` and SMTP values.
+- `src\backend\.env`: `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGINS` and `SCHEDULER_SECRET`. Optional settings include `GOOGLE_APPLICATION_CREDENTIALS`, `LOCAL_INVOICE_STORAGE_DIR` and SMTP values.
 
 Vite exposes variables prefixed with `VITE_` to browser code; do not put private keys, passwords or service-account credentials in the root `.env`. `.env.example` files contain placeholders and should remain safe to commit.
 
@@ -197,18 +191,6 @@ firebase deploy --only firestore:rules,firestore:indexes
 ```
 
 The backend uses Firebase Admin SDK with Application Default Credentials locally. Admin SDK access bypasses Firestore rules, so API routes also enforce ownership. The browser-side Firebase Authentication uses the root `.env` web configuration.
-
-## Run with Docker
-
-The existing Dockerfile builds the backend only. From the repository root:
-
-```powershell
-Set-Location backend
-docker build -t warrantly-api .
-docker run --rm --name warrantly-api -p 8000:8080 --env-file .env warrantly-api
-```
-
-Create `backend\.env` from `backend\.env.example` first. The container needs Firebase Admin credentials at runtime for Firestore-backed API operations; configure ADC or securely mount a credential and set `GOOGLE_APPLICATION_CREDENTIALS` to its **container path**. Do not copy credential files into the build context or image. No `docker-compose.yml` is present; Docker Compose commands are therefore not applicable. The frontend remains a separate Vite process (`npm run dev` from the repository root).
 
 ## API outline
 
@@ -239,13 +221,13 @@ Product documents are stored in `products` and include the user ID, product info
 
    ```powershell
    gcloud run deploy warranty-api `
-     --source backend `
+     --source src\backend `
      --region us-central1 `
      --allow-unauthenticated `
      --set-env-vars "FIREBASE_PROJECT_ID=your-project-id,ALLOWED_ORIGINS=https://your-project-id.web.app,SCHEDULER_SECRET=your-long-secret,LOCAL_INVOICE_STORAGE_DIR=.local_storage"
    ```
 
-   `--allow-unauthenticated` allows the browser to reach the API; protected API routes still require verified Firebase ID tokens. Do not put service-account private keys in the image or environment. Cloud Run should use its attached service identity via Application Default Credentials. **Local invoice files on Cloud Run are ephemeral and are not a durable storage solution.**
+   `--allow-unauthenticated` allows the browser to reach the API; protected API routes still require verified Firebase ID tokens. Cloud Run should use its attached service identity via Application Default Credentials. **Local invoice files on Cloud Run are ephemeral and are not a durable storage solution.**
 
 4. For optional email reminders, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` and `SMTP_FROM` using Secret Manager-backed Cloud Run environment variables. Keep credentials out of source control and command history.
 
@@ -281,14 +263,21 @@ Set the same secret on Cloud Run as `SCHEDULER_SECRET`. The endpoint creates Fir
 ## Test
 
 ```powershell
-Set-Location backend
+Set-Location src\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-The tests cover authentication requirements across API routes, scheduler authorization, invoice validation/local disk lifecycle/path isolation, month-end/leap-year expiry calculation, status thresholds and product validation. Test output is printed to the terminal. To save a plain-text report from PowerShell, run the test command from `backend` and pipe it to `Tee-Object`, for example `python -m unittest discover -s tests -v 2>&1 | Tee-Object -FilePath ..\unittest-report.txt`. No XML/HTML report generator is currently configured. For an end-to-end check, configure Firebase, run the API and frontend, then register an account and exercise product, invoice and service-record operations through the UI and `/docs`.
+The tests cover authentication requirements across API routes, scheduler authorization, invoice validation/local disk lifecycle/path isolation, month-end/leap-year expiry calculation, status thresholds and product validation. Test output is printed to the terminal. To save a plain-text report from PowerShell, run these commands from `src\backend`:
+
+```powershell
+New-Item -ItemType Directory -Force test_reports | Out-Null
+python -m unittest discover -s tests -v 2>&1 | Tee-Object -FilePath test_reports\unittest-report.txt
+```
+
+No XML/HTML report generator is currently configured. For an end-to-end check, configure Firebase, run the API and frontend, then register an account and exercise product, invoice and service-record operations through the UI and `/docs`.
 
 ## OCR dependency
 
@@ -298,8 +287,8 @@ PDF text extraction uses PyMuPDF. Image OCR uses Tesseract through `pytesseract`
 
 - **Firebase sign-in is disabled:** check the root `.env` has all required `VITE_FIREBASE_*` values, then restart Vite.
 - **Dashboard API requests fail:** verify the API is running at `VITE_API_URL` and that its `ALLOWED_ORIGINS` includes the Vite origin (normally `http://localhost:5173`).
-- **Firestore reports missing credentials or project:** authenticate with `gcloud auth application-default login` and set `FIREBASE_PROJECT_ID` in `backend\.env`.
-- **Invoice files are unavailable after container restart:** local container storage is not durable; use durable object storage before production use.
+- **Firestore reports missing credentials or project:** authenticate with `gcloud auth application-default login` and set `FIREBASE_PROJECT_ID` in `src\backend\.env`.
+- **Invoice files are unavailable after a Cloud Run restart:** local instance storage is not durable; use durable object storage before production use.
 - **Image OCR returns no text:** install Tesseract separately and confirm it is on `PATH`; PDF text extraction does not require Tesseract.
 - **PowerShell blocks virtual-environment activation:** use `.\.venv\Scripts\python.exe -m pip ...` and `.\.venv\Scripts\python.exe -m uvicorn ...` without activating the environment.
 
